@@ -15,7 +15,7 @@ screen = pygame.display.set_mode((800, 600))
 blast = pygame.image.load("explode.png")
 
 # Background
-background = pygame.image.load("background.jpg")
+background = pygame.image.load("background1800x600.jpg")
 
 # Backgrounf game
 mixer.music.load("bg-1.mp3")
@@ -44,7 +44,7 @@ for i in range(num_of_enemies):
     enemyImg.append(pygame.image.load("alien2.png"))
     enemyX.append(random.randint(0, 736))
     enemyY.append(random.randint(20, 150))
-    enemyX_change.append(0.3)
+    enemyX_change.append(0.5)
     enemyY_change.append(30)
 
 # Bullets
@@ -52,7 +52,7 @@ bulletImg = pygame.image.load("bullet.png")
 bulletX = 0
 bulletY = 480
 # bulletX_change = 0.3
-bulletY_change = 2
+bulletY_change = 4
 bullet_state = "ready"
 
 
@@ -66,20 +66,66 @@ textY = 10
 # Game Over
 over_font = pygame.font.Font('Game Space Academy.otf', 64)
 
+# Pause
+pause_font = pygame.font.Font("Game Space Academy.otf", 75)
+press_pause = pygame.font.Font("Game Space Academy.otf", 30)
+def pause():
+    paused = True
+
+    while paused:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_c:
+                    paused = False
+                elif event.key == pygame.K_q:
+                    pygame.quit()
+                    quit()
+
+        pause = pause_font.render("Paused!", True, (0, 0, 255))
+        message1 = font.render("Press C to continue", True, (255, 255, 0))
+        message2 = font.render("Press Q to Quit", True, (255, 255, 0))
+        screen.blit(pause, (300, 160))
+        screen.blit(message1, (270, 260))
+        screen.blit(message2, (290, 300))
+
+        pygame.display.update()
+
+
+
 def show_score(x, y):
-    score = font.render("Score: " + str(score_value),True, (255, 0, 0))
+    score = font.render("Score: " + str(score_value), True, (255, 0, 0))
     screen.blit(score, (x, y))
 
+
+#Shoe message
+def show_message():
+    press = press_pause.render("Press P to pause", True, (255, 255, 255))
+    screen.blit(press, (630, 10))
+def high_score(x, y):
+    score = font.render("High Score: " + str(highest_score), True, (255, 0, 0))
+    screen.blit(score, (x, y))
 
 # we cannot see the bullet when ready
 # we can see the bullet when fire
 
 def game_over_text():
     over_text = over_font.render("GAME OVER", True, (255, 0, 0))
-    screen.blit(over_text, (200, 250))
+    player_score = font.render("Your Score: "+str(score_value), True, (255, 255, 0))
+    h_score = font.render("Higest score: "+str(highest_score), True, (255, 0, 0))
+    screen.blit(over_text, (270, 250))
+    screen.blit(player_score, (300, 350))
+    screen.blit(h_score, (300, 380))
 
 def player(x, y):
     screen.blit(playerImg, (x, y))
+
+#show High score
+def for_high_score():
+    with open("high Score.txt", "r") as f:
+        return f.read()
 
 
 def enemy(x, y, i):
@@ -94,6 +140,10 @@ def fire(x, y):
 def blastFire(x, y):
     screen.blit(blast, (x, y))
 
+try:
+    highest_score = int(for_high_score())
+except:
+    highest_score = 0
 
 def isCollision(enemyX, enemyY, bulletX, bulletY):
     distance = math.sqrt((math.pow(enemyX-bulletX, 2)) + (math.pow(enemyY-bulletY, 2)))
@@ -128,6 +178,8 @@ while running:
                     bullet_sound.play()
                     bulletX = playerX
                     fire(bulletX, bulletY)
+            if event.key == pygame.K_p:
+                pause()
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                 playerX_change = 0
@@ -153,10 +205,11 @@ while running:
         enemyX[i] += enemyX_change[i]
 
         if enemyX[i] <= 0:
-            enemyX_change[i] = 0.3
+            # 0.3
+            enemyX_change[i] = 0.5
             enemyY[i] += enemyY_change[i]
         elif enemyX[i] >= 736:
-            enemyX_change[i] = -0.1
+            enemyX_change[i] = -0.5
             enemyY[i] += enemyY_change[i]
 
         # Collision
@@ -175,6 +228,11 @@ while running:
         enemy(enemyX[i], enemyY[i], i)
 
 
+    # check high score
+    if(highest_score < score_value):
+        highest_score = score_value
+    with open("high Score.txt","w") as f:
+        f.write(str(highest_score))
     # bullet movement
     if bulletY <= 0 :
         bulletY = 480
@@ -187,4 +245,6 @@ while running:
 
     player(playerX, playerY)
     show_score(textX, textY)
+    high_score(10, 50)
+    show_message()
     pygame.display.update()
